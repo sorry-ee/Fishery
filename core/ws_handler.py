@@ -9,7 +9,7 @@ from core.h264_streamer import H264Encoder
 _log = logging.getLogger("h264")
 
 
-def register_ws(sock, video_stream, frame_processor):
+def register_ws(sock, video_stream, frame_processor, system_state=None):
     """注册 WebSocket 路由到 Flask-Sock 实例。"""
 
     @sock.route('/ws_video')
@@ -20,6 +20,8 @@ def register_ws(sock, video_stream, frame_processor):
             return
         height, width = frame.shape[:2]
 
+        if system_state is not None:
+            system_state['adaptive_runtime_connected'] = True
         try:
             encoder = H264Encoder(width, height, fps=30, encoder=config.H264_ENCODER)
             encoder.start()
@@ -74,7 +76,15 @@ def register_ws(sock, video_stream, frame_processor):
                     break
                 empty_retries = 0
                 try:
+                    limit_kbps = (system_state or {}).get('adaptive_test_bandwidth_kbps', 0)
+                    send_started = time.perf_counter()
+                    if limit_kbps:
+                        time.sleep(len(seg) * 8 / (limit_kbps * 1000))
                     ws.send(seg)
+                    if system_state is not None:
+                        elapsed = max(time.perf_counter() - send_started, 1e-6)
+                        system_state['adaptive_throughput_kbps'] = round(len(seg) * 8 / 1000 / elapsed, 1)
+                        system_state['adaptive_media_lag_ms'] = round(elapsed * 1000, 1)
                 except Exception:
                     running = False
                     break
@@ -87,4 +97,6 @@ def register_ws(sock, video_stream, frame_processor):
         finally:
             running = False
             encoder.stop()
+            if system_state is not None:
+                system_state['adaptive_runtime_connected'] = False
             _log.info("[H264] WebSocket 断开，编码器已释放 (error=%s)", bool(producer_error))

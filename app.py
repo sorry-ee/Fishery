@@ -30,6 +30,7 @@ from core.llm_advisor import FisheryAdvisor
 import core.llm_settings as llm_settings_cfg
 from core.storage import Storage
 from core.frame_processor import create_frame_processor
+from core.network_simulator import NetworkSimulator
 from core.ws_handler import register_ws
 
 # ---- Flask ----
@@ -46,7 +47,16 @@ def require_auth(f):
     return wrapper
 
 # ---- 全局状态 ----
-system_state = {"ai_enabled": True, "enhancement_enabled": False, "seg_enabled": False}
+system_state = {
+    "ai_enabled": True,
+    "enhancement_enabled": False,
+    "seg_enabled": False,
+    "adaptive_test_bandwidth_kbps": 0,
+    "adaptive_runtime_connected": False,
+    "adaptive_throughput_kbps": 0.0,
+    "adaptive_media_lag_ms": 0.0,
+}
+network_simulator = NetworkSimulator(system_state)
 video_stream = VideoCaptureThreading(config.STREAM_URL)
 ai_detector = FisheryAI(config.AVAILABLE_MODELS[config.DEFAULT_MODEL_KEY], model_key=config.DEFAULT_MODEL_KEY)
 enhancer = WWEEnhancer()
@@ -61,7 +71,11 @@ last_processed_frame = None  # 截图复用，避免抢流
 perf_state = {"fps": 0.0, "last_update": 0}  # 性能快照，frame_processor 每 0.5s 更新
 
 # 注册 H.264 WebSocket
-register_ws(sock, video_stream, lambda: create_frame_processor(system_state, enhancer, ai_detector, perf_state))
+register_ws(
+    sock, video_stream,
+    lambda: create_frame_processor(system_state, enhancer, ai_detector, perf_state),
+    system_state,
+)
 
 # 预创建输出目录（统一放 outputs/：images 截图 / videos 录像 / chats AI 对话文本）
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -127,6 +141,7 @@ def perf_snapshot():
         'fish_count': ai_detector.last_count if ai_detector else 0,
         'ts': time.time(),
     }
+    data.update(network_simulator.status())
     # GPU 显存
     try:
         import pynvml
@@ -149,6 +164,23 @@ def perf_snapshot():
     except Exception:
         pass
     return jsonify(data)
+
+
+@app.route('/network_simulator/status')
+def network_simulator_status():
+    return jsonify(network_simulator.status())
+
+
+@app.route('/network_simulator', methods=['POST'])
+@require_auth
+def set_network_simulator():
+    data = request.get_json(silent=True) or {}
+    try:
+        if data.get('action') == 'demo':
+            return jsonify(network_simulator.start_demo())
+        return jsonify(network_simulator.set_mode(data.get('mode', 'normal')))
+    except ValueError as exc:
+        return jsonify({'status': 'error', 'message': str(exc)}), 400
 
 # -- AI 控制 --
 

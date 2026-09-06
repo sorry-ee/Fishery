@@ -366,6 +366,24 @@
                 </div>
             </div>
 
+            <div class="card" data-collapsible>
+                <div class="card-head" data-toggle>
+                    <h3>网络实验控制</h3>
+                    <button class="card-toggle" title="折叠/展开">−</button>
+                </div>
+                <div class="card-body">
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+                        <button class="capture-btn" onclick="setNetworkMode('normal')">正常 / 不限速</button>
+                        <button class="capture-btn" onclick="setNetworkMode('light')">轻度 3000 kbps</button>
+                        <button class="capture-btn" onclick="setNetworkMode('medium')">中度 1200 kbps</button>
+                        <button class="capture-btn" onclick="setNetworkMode('severe')">重度 800 kbps</button>
+                        <button class="capture-btn" style="grid-column:1/-1;" onclick="startNetworkDemo()">自动演示 6000→1200→6000</button>
+                    </div>
+                    <div id="networkSimulatorStatus" style="white-space:pre-line;font-size:11px;color:var(--text-muted);margin-top:8px;">正在读取链路状态…</div>
+                    <div id="networkRuntimeStatus" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+                </div>
+            </div>
+
             <!-- 事件日志卡片 -->
             <div class="card" data-collapsible>
                 <div class="card-head" data-toggle>
@@ -532,6 +550,40 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        function renderNetworkState(data) {
+            let limit = Number(data.network_simulator_bandwidth_kbps || 0);
+            document.getElementById('networkSimulatorStatus').innerText =
+                '当前：' + (data.network_simulator_label || '--') +
+                (limit ? '｜限速 ' + limit + ' kbps' : '｜不限速') +
+                (data.network_demo_active ? '\n自动演示中，剩余约 ' + data.network_demo_remaining_s + ' 秒' : '') +
+                '\n只作用于本网页 H.264 实验链路，不影响电脑其他网络。';
+            document.getElementById('networkRuntimeStatus').innerText =
+                '实时：' + (data.adaptive_runtime_connected ? '网页视频已连接' : '等待网页视频连接') +
+                '｜发送吞吐 ' + Number(data.adaptive_throughput_kbps || 0).toFixed(1) + ' kbps' +
+                '｜单片发送 ' + Number(data.adaptive_media_lag_ms || 0).toFixed(1) + ' ms';
+        }
+
+        function refreshNetworkState() {
+            fetch('/perf_snapshot').then(r => r.json()).then(renderNetworkState).catch(() => {});
+        }
+
+        function setNetworkMode(mode) {
+            authFetch('/network_simulator', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({mode: mode})
+            }).then(r => r.json()).then(renderNetworkState);
+        }
+
+        function startNetworkDemo() {
+            authFetch('/network_simulator', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'demo'})
+            }).then(r => r.json()).then(renderNetworkState);
+        }
+
+        setInterval(refreshNetworkState, 1000);
+        refreshNetworkState();
 
         // 基础控制函数
         function toggleAI() {

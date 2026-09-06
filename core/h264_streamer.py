@@ -14,6 +14,12 @@ import numpy as np
 import cv2
 
 
+class EncodedPacket:
+    def __init__(self, data):
+        self.data = data
+        self.created_at = time.perf_counter()
+
+
 class MP4BoxParser:
     """解析 ISO BMFF (fMP4) 顶层 box。"""
 
@@ -75,11 +81,13 @@ class H264Encoder:
     encoder: "libx264" (CPU软编) 或 "h264_nvenc" (NVIDIA硬编)
     """
 
-    def __init__(self, width: int, height: int, fps: int = 30, encoder: str = "libx264"):
+    def __init__(self, width: int, height: int, fps: int = 30,
+                 encoder: str = "libx264", bitrate_kbps: int | None = None):
         self.width = width
         self.height = height
         self.fps = fps
         self.encoder = encoder
+        self.bitrate_kbps = bitrate_kbps
 
         if not _find_ffmpeg():
             raise RuntimeError("找不到 FFmpeg，请安装后重试。")
@@ -87,7 +95,10 @@ class H264Encoder:
         self.process: subprocess.Popen | None = None
         self.parser = MP4BoxParser()
         self.init_segment: bytes | None = None
-        self._seg_queue: queue.Queue = queue.Queue(maxsize=1000)
+        self._seg_queue: queue.Queue = queue.Queue(maxsize=2)
+        self._queue_lock = threading.Lock()
+        self._queued_bytes = 0
+        self._dropped_segments = 0
         self.running = False
         self._reader_thread: threading.Thread | None = None
         self._drain_thread: threading.Thread | None = None
@@ -100,11 +111,23 @@ class H264Encoder:
             codec_args = ['-c:v', 'h264_nvenc', '-preset', 'p1',
                           '-tune', 'll',
                           '-pix_fmt', 'yuv420p']
+        elif self.encoder == "h264_videotoolbox":
+            codec_args = ['-c:v', 'h264_videotoolbox', '-realtime', '1',
+                          '-prio_speed', '1', '-profile:v', 'baseline',
+                          '-level:v', '4.0', '-pix_fmt', 'yuv420p']
         else:
             codec_args = ['-c:v', 'libx264', '-preset', 'ultrafast',
                           '-tune', 'zerolatency',
                           '-profile:v', 'baseline', '-level:v', '3.1',
                           '-pix_fmt', 'yuv420p']
+
+        rate_args = []
+        if self.bitrate_kbps:
+            rate_args = [
+                '-b:v', f'{self.bitrate_kbps}k',
+                '-maxrate', f'{self.bitrate_kbps}k',
+                '-bufsize', f'{self.bitrate_kbps * 2}k',
+            ]
 
         cmd = [
             'ffmpeg',
@@ -113,7 +136,8 @@ class H264Encoder:
             '-r', str(self.fps),
             '-i', '-',
             *codec_args,
-            '-g', '30',
+            *rate_args,
+            '-g', str(self.fps),
             '-f', 'mp4',
             '-movflags', 'empty_moov+default_base_moof+frag_every_frame',
             '-flush_packets', '1',
@@ -152,6 +176,26 @@ class H264Encoder:
             seg.extend(_pack_mp4_box(bt, pl))
         self.init_segment = bytes(seg)
 
+    def _put_latest_segment(self, segment):
+        """网络发送变慢时丢弃旧分片，保证客户端拿到最新画面。"""
+        packet = EncodedPacket(segment)
+        while True:
+            try:
+                self._seg_queue.put_nowait(packet)
+                if segment is not None:
+                    with self._queue_lock:
+                        self._queued_bytes += len(segment)
+                return
+            except queue.Full:
+                try:
+                    dropped = self._seg_queue.get_nowait()
+                    if dropped.data is not None:
+                        with self._queue_lock:
+                            self._queued_bytes -= len(dropped.data)
+                            self._dropped_segments += 1
+                except queue.Empty:
+                    pass
+
     def _read_loop(self):
         init_boxes = []
         init_ready = False
@@ -179,7 +223,7 @@ class H264Encoder:
                     combined = bytearray()
                     combined.extend(_pack_mp4_box('moof', pending_moof))
                     combined.extend(_pack_mp4_box('mdat', payload))
-                    self._seg_queue.put(bytes(combined))
+                    self._put_latest_segment(bytes(combined))
                     pending_moof = None
 
         # 读取流关闭前的剩余数据
@@ -198,7 +242,7 @@ class H264Encoder:
         except Exception:
             pass
 
-        self._seg_queue.put(None)
+        self._put_latest_segment(None)
 
     def encode_frame(self, frame: np.ndarray):
         """将一帧 BGR 图像写入 FFmpeg 标准输入。"""
@@ -217,10 +261,27 @@ class H264Encoder:
 
     def get_segment(self, block=True, timeout=0.5):
         """获取下一个 media segment，流结束时返回 None。"""
+        packet = self.get_segment_packet(block=block, timeout=timeout)
+        return packet.data if packet is not None else None
+
+    def get_segment_packet(self, block=True, timeout=0.5):
+        """获取带产生时间的分片，供实时链路计算排队和媒体滞后。"""
         try:
-            return self._seg_queue.get(block=block, timeout=timeout)
+            packet = self._seg_queue.get(block=block, timeout=timeout)
+            if packet.data is not None:
+                with self._queue_lock:
+                    self._queued_bytes -= len(packet.data)
+            return packet
         except queue.Empty:
             return None
+
+    def queue_stats(self):
+        with self._queue_lock:
+            return {
+                'queued_bytes': self._queued_bytes,
+                'dropped_segments': self._dropped_segments,
+                'queued_segments': self._seg_queue.qsize(),
+            }
 
     def stop(self):
         """终止 FFmpeg 子进程。"""
