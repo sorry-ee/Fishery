@@ -166,7 +166,7 @@ if ($ffmpeg) {
         if ($m.Groups[1].Value) { $cams += $m.Groups[1].Value }
     }
     if ($cams.Count -gt 0) {
-        Emit "INFO" "可用摄像头" (($cams -join " | ") + " —— 真实推流见 Z_script\start_pc_camera.ps1 / start_usb_camera.ps1")
+        Emit "INFO" "可用摄像头" (($cams -join " | ") + " —— 真实推流见 Z_script\run\start_pc_camera.ps1 / start_usb_camera.ps1")
     } else {
         Emit "WARN" "可用摄像头" "未检测到（真实摄像头不可用；可用本地视频/RTSP 代替）"
     }
@@ -338,7 +338,7 @@ $hasVideo = @(Get-ChildItem (Join-Path $Root "test_video*.mp4") -ErrorAction Sil
 if ($hasVideo) {
     Emit "PASS" "本地推流视频源" "test_video*.mp4 存在"
 } else {
-    Emit "WARN" "本地推流视频源" "无 test_video*.mp4（需连接真实 RTSP 摄像头或用 Z_script\start_all.ps1 推流）"
+    Emit "WARN" "本地推流视频源" "无 test_video*.mp4（需连接真实 RTSP 摄像头或用 Z_script\run\start_all.ps1 推流）"
 }
 
 # =====================================================================
@@ -420,7 +420,7 @@ if ($script:fatal -gt 0) {
     exit 1
 } else {
     Write-Host ("就绪 {0} / 警告 {1} / 失败 {2}" -f $script:pass, $script:warn, $script:fatal)
-    if ($NoColor) { Write-Host "环境就绪，可运行 Z_script\start_all.ps1 启动。" }
+    if ($NoColor) { Write-Host "环境就绪，可运行 Z_script\run\start_all.ps1 启动。" }
     else { Write-Host "环境就绪，可运行 Z_script\start_all.ps1 启动。" -ForegroundColor Green }
     exit 0
 }

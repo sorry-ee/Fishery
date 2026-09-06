@@ -4,11 +4,12 @@
 Fishery_Project/
 ├── app.py                  # Flask 主入口（“接线员”：路由+鉴权；另含截图/录制、记录回看（媒体+对话）端点与对话自动存档）
 ├── config.py               # 全局配置：模型路径、阈值、LLM、编码器、认证
-├── Z_script/                 # PowerShell 启动/工具脚本（须 UTF-8 with BOM）
-│   ├── start_all.ps1         # 一键启动：本地视频推流 + Flask
-│   ├── start_all_with_sensor.ps1  # 视频 + 传感器模拟数据一键启动（演示最全）
-│   ├── start_pc_camera.ps1   # 电脑内置摄像头启动
-│   ├── start_usb_camera.ps1  # 外接 USB 摄像头启动
+├── Z_script/                 # PowerShell 脚本（须 UTF-8 with BOM）
+│   ├── run/                  # 一键启动脚本（默认带传感器模拟数据，-NoSensor 去掉）
+│   │   ├── start_all.ps1     # 本地视频推流启动
+│   │   ├── start_pc_camera.ps1  # 电脑内置摄像头启动（设备自动检测）
+│   │   ├── start_usb_camera.ps1 # 外接 USB 摄像头启动（设备自动检测）
+│   │   └── run-common.ps1    # 启动公共函数库（被 start_*.ps1 dot-source）
 │   ├── check_env.ps1         # 环境就绪自检（只读）
 │   └── clean_outputs.ps1     # 清理运行产出
 ├── AGENTS.md               # 项目指南与修改规范

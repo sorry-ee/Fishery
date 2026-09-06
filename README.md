@@ -10,7 +10,7 @@
 - 传感器监测：水温 / pH / 溶解氧上报、曲线与历史
 - 智能告警：规则阈值诊断 + 事件日志
 - AI 顾问：DeepSeek 大模型 + 鳗鲡养殖知识库（RAG）实时问答与诊断
-- 一键启动：`Z_script\start_all.ps1`（本地视频推流）/ `Z_script\start_pc_camera.ps1`、`Z_script\start_usb_camera.ps1`（真实摄像头）
+- 一键启动：`Z_script\run\start_all.ps1`（本地视频推流）/ `Z_script\run\start_pc_camera.ps1`、`Z_script\run\start_usb_camera.ps1`（真实摄像头）——默认都带传感器模拟数据，`-NoSensor` 去掉
 
 ## 快速开始
 
@@ -21,9 +21,9 @@
 
 ```powershell
 cd d:\Fishery_Project
-.\Z_script\start_all.ps1            # 本地视频推流
-.\Z_script\start_usb_camera.ps1     # 外接 USB 摄像头（真实场景）
-.\Z_script\start_all_with_sensor.ps1  # 视频 + 传感器模拟数据（演示最全，AI 报告带真实水质）
+.\Z_script\run\start_all.ps1            # 本地视频推流（默认带模拟数据）
+.\Z_script\run\start_usb_camera.ps1     # 外接 USB 摄像头（真实场景）
+.\Z_script\run\start_all.ps1 -NoSensor  # 不带模拟数据
 ```
 
 脚本自动启动 mediamtx → 推流 → 启动 Flask，约 15 秒后自动打开浏览器。

@@ -7,7 +7,7 @@
 - **现象**：脚本一运行就报"字符串缺少终止符"，所有进程都没启动，浏览器打不开。
 - **原因**：Windows PowerShell 5.1（`powershell`）会把无 BOM 的 .ps1 按 ANSI(GBK) 读取，中文注释乱码破坏引号，导致整脚本解析失败。
 - **解决**：文件保存为 UTF-8 with BOM（或用 pwsh 7 运行）。
-- **验证**：用 `powershell -NoProfile -ExecutionPolicy Bypass -File Z_script\start_all.ps1` 实测（勿只用 pwsh 解析，测不出 5.1 的问题；`Z_script/` 下所有 .ps1 同理）。
+- **验证**：用 `powershell -NoProfile -ExecutionPolicy Bypass -File Z_script\run\start_all.ps1` 实测（勿只用 pwsh 解析，测不出 5.1 的问题；`Z_script/` 下所有 .ps1 同理）。
 
 ## 2. AI 报告在网页上无法正常显示（部分修复）
 
@@ -77,7 +77,7 @@
 
 ## 10. 启动脚本退出：Ctrl+C 正常清理；强杀会残留孤儿进程（2026-09-04）
 
-- **现象**：`start_all_with_sensor.ps1`（及 camera 版）若被**强制结束**（任务管理器 / 杀终端进程 / 调试器 Kill），后台的 mediamtx、ffmpeg、传感器模拟器（`datatran_test.py`）不会自动退出，成为孤儿进程继续占用 8554/5000 端口；`scratch\sensor_sim*.log` 也不被清理。
+- **现象**：`Z_script\run\start_all.ps1`（及 pc/usb camera 版，默认带传感器模拟）若被**强制结束**（任务管理器 / 杀终端进程 / 调试器 Kill），后台的 mediamtx、ffmpeg、传感器模拟器（`datatran_test.py`）不会自动退出，成为孤儿进程继续占用 8554/5000 端口；`scratch\sensor_sim*.log` 也不被清理。
 - **原因**：这些子进程由脚本 `Start-Process` 启动，`finally` 里的清理只在脚本进程**正常收尾**（如收到 `Ctrl+C` 中断）时执行；进程被外部强杀时 `finally` 不会运行。
 - **✅ 正常用法**：在脚本自己的窗口按 `Ctrl+C` 退出即可自动清理，无需手动处理。
 - **若已残留**，手动清理：

@@ -4,7 +4,7 @@
 
 **智慧渔业水下协同控制系统** — 实时水下视频监测与分析平台。
 
-- **入口**：`python app.py`（或一键启动 `Z_script\start_all.ps1`）
+- **入口**：`python app.py`（或一键启动 `Z_script\run\start_all.ps1`，默认带传感器模拟数据）
 - **Web**：`http://127.0.0.1:5000`
 - **Git 仓库**：`https://github.com/Mikorchara/Fishery.git`
 - **视频源**：RTSP 流（真实摄像头 / ffmpeg 推本地文件模拟）
@@ -136,28 +136,29 @@ docs/patches/
 
 ### 方式一：一键启动（推荐）
 
-所有 PowerShell 启动脚本统一放在 `Z_script/`，在项目根按需选用：
+启动脚本统一放在 `Z_script/run/`（公共函数在 `run-common.ps1`），在项目根按需选用：
+**默认都附带传感器模拟数据**（`tests/datatran_test.py` 后台循环上报，开箱即有波动水质、可直接生成完整 AI 报告）；加 `-NoSensor` 可去掉。
 
 ```powershell
 cd d:\Fishery_Project
 
-# ① 本地视频文件推流（演示/测试）
-.\Z_script\start_all.ps1
+# ① 本地视频文件推流（默认带模拟数据）
+.\Z_script\run\start_all.ps1
 
-# ② 电脑内置摄像头（HP Wide Vision HD Camera，720p@30）
-.\Z_script\start_pc_camera.ps1
+# ② 电脑内置摄像头（HP Wide Vision HD Camera，默认带模拟数据）
+.\Z_script\run\start_pc_camera.ps1
 
-# ③ 外接 USB 摄像头（USB Video Device，720p@10）
-.\Z_script\start_usb_camera.ps1
+# ③ 外接 USB 摄像头（USB Video Device，默认带模拟数据）
+.\Z_script\run\start_usb_camera.ps1
 
-# ④ 视频 + 传感器模拟数据一起启动（演示最全）
-.\Z_script\start_all_with_sensor.ps1
+# 例：不要模拟数据 / 指定摄像头设备
+.\Z_script\run\start_all.ps1 -NoSensor
+.\Z_script\run\start_pc_camera.ps1 -NoSensor -DeviceName "其它摄像头名"
 ```
 
-- `start_all.ps1`：启动 mediamtx → 自动挑选视频推流（`test_video.mp4` / `test_video_2.mp4` / `outputs/videos` 最新）→ Flask → 自动打开浏览器。
-- `start_pc_camera.ps1` / `start_usb_camera.ps1`：启动 mediamtx → ffmpeg 把对应摄像头推成 RTSP → Flask。设备名可用 `-DeviceName` 覆盖，分辨率用 `-VideoSize` / `-Fps`。
-- `start_all_with_sensor.ps1`：在 `start_all.ps1` 基础上**自动附带传感器模拟器**（`tests/datatran_test.py` 后台循环上报），开箱即有波动的实时水质数据，可直接生成完整 AI 报告。
-- 按 `Ctrl+C` 退出时自动关闭本次启动的 传感器模拟器/ffmpeg/mediamtx（已在运行的 mediamtx 不会误关）。
+- 启动顺序：mediamtx（已在跑则跳过）→ ffmpeg 推流（`start_all` 选 `test_video*.mp4` / `outputs/videos` 最新；摄像头脚本实时采集）→ 传感器模拟器 → Flask → 约 15 秒自动开浏览器。
+- 摄像头脚本：分辨率 `-VideoSize` / 帧率 `-Fps` 可调；设备名为参数默认值（非写死），默认名找不到时会自动枚举——唯一则自动选用、多个则交互选择，或用 `-DeviceName` 显式指定。
+- 按 `Ctrl+C` 退出自动关闭本次启动的 模拟器/ffmpeg/mediamtx（已在运行的 mediamtx 不会误关）。
 
 > **注意**：以上脚本均须保持 **UTF-8 with BOM** 编码，否则 Windows PowerShell 5.1 会因中文乱码导致整脚本解析失败。
 

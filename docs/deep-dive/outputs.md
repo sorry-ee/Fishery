@@ -106,7 +106,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `test_video.mp4` / `test_video_2.mp4` | `Z_script\start_all.ps1` 优先选择的 ffmpeg 推流源（本地视频模拟 RTSP）。**是运行依赖**，`Z_script\clean_outputs.ps1` 明确不删 |
+| `test_video.mp4` / `test_video_2.mp4` | `Z_script\run\start_all.ps1` 优先选择的 ffmpeg 推流源（本地视频模拟 RTSP）。**是运行依赖**，`Z_script\clean_outputs.ps1` 明确不删 |
 | `test_img.png` | 单帧测试图，供离线脚本验证 |
 
 ---

@@ -14,12 +14,13 @@
 - 默认关闭 LLM 思考（2026-09-05）：`core/llm_advisor.py` 按模型注入关闭参数 —— deepseek-v4 → `thinking.disabled`；qwen3.x → `enable_thinking=false`；MiMo-V2.5 暂无公开关闭参数保持原样
 - 对话与诊断报告**流式打字机**（2026-09-05）：`llm_advisor` 新增 `stream_advice/stream_answer`；`app.py` 新增 SSE `/chat_ai_stream`、`/get_ai_advice_stream`（旧非流式保留回退）；前端逐字显示、完成渲染 Markdown；`finish_reason=length` 追加截断提示
 - 传感器上报 + SQLite 持久化 + 规则告警
-- 一键启动脚本 `Z_script\start_all.ps1`（mediamtx + ffmpeg + Flask；另有电脑/外接摄像头版 `start_pc_camera.ps1` / `start_usb_camera.ps1`）
+- 一键启动脚本 `Z_script\run\start_all.ps1`（mediamtx + ffmpeg + 传感器模拟(默认) + Flask；另有电脑/外接摄像头版 `start_pc_camera.ps1` / `start_usb_camera.ps1`，默认同样带模拟数据，`-NoSensor` 去掉）
 - Git 化并上传 GitHub（https://github.com/Mikorchara/Fishery.git）
 - docs/ 文档整理（ROADMAP / troubleshooting / code_review / BUILD_RUN / structure / deep-dive）
 - 工程化（2026-09-05）：启动/自检脚本去硬编码（`$PSScriptRoot` 自动定位）；自带 ffmpeg（`tools/ffmpeg/bin`）优先、缺省回退 PATH；mediamtx 与 ffmpeg 统一归拢 `tools/`
 - 运行产物归拢（2026-09-05）：截图/录像/AI 对话文本统一 `outputs/{images,videos,chats}`（gitignore）；对话与诊断报告**自动落盘 Markdown**（时间/模型/环境快照/提问/回复）
 - 记录回看界面（2026-09-05~06）：视频区标题栏入口按钮 → 独立视图（返回监控可切回）；左侧对话记录浏览（左键查看·右键重命名/删除）；右侧图片/视频缩略图（可切换·左键系统查看器·右键重命名/删除）；截图/录像以时间命名；设计思路见 `scratch/记录回看outputs界面_设计复用.md`
+- 脚本结构（2026-09-06）：启动脚本归拢 `Z_script/run/`（公共库 `run-common.ps1`，被 start_*.ps1 dot-source）；三个启动脚本统一**默认带传感器模拟数据、`-NoSensor` 去掉**（`start_all_with_sensor.ps1` 已合并入 `start_all.ps1`）；摄像头脚本设备名自动检测（默认名找不到时唯一自动选用 / 多个交互选择，`-DeviceName` 可显式指定并校验）
 
 ## 进行中 🔄
 

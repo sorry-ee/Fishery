@@ -40,7 +40,7 @@ powershell -ExecutionPolicy Bypass -File Z_script\check_env.ps1 -CheckOnnx -Deep
 
 ## 2. 背景与定位
 
-- 启动链路：`Z_script\start_all.ps1` → mediamtx + ffmpeg + Flask(`app.py`)；`app.py` 启动会加载 YOLO/SAM2/WWE-UIE/RAG。
+- 启动链路：`Z_script\run\start_all.ps1` → mediamtx + ffmpeg + 传感器模拟(默认) + Flask(`app.py`)；`app.py` 启动会加载 YOLO/SAM2/WWE-UIE/RAG。
 - 依赖横跨：venv、GPU 驱动、第三方包、外部程序（ffmpeg/mediamtx）、模型、密钥、端口——任一缺失，新人只能靠“试运行看报错”排查，沟通成本高。
 - 本脚本定位 = **只读环境预检（preflight）**，尽量不打扰系统。
 
