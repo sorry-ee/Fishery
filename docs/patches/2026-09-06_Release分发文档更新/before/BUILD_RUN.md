@@ -42,12 +42,7 @@ pip install -r WWE-UIE/requirements.txt
 
 ### 4. 模型文件
 
-> **推荐（Clone 即用）**：模型权重（`*.pt`/`*.onnx`/`*.om`）不入 git，clone 后 `models/` 缺失属正常。
-> 本仓库 **Releases** 提供打包好的 `models_*.zip`（全部模型 + `.yaml` 配置）——下载后解压到**项目根**即得 `models/`。
-> 维护者可用 `Z_script\pack_models.ps1` 重新打包（产物在 `dist/models_*.zip`，gitignore）。
-> 以下为手动放置方式（无现成 zip 时的兜底）：
-
-放于 `models/`：
+放于 `models/`（权重均不入 git）：
 - 必需：`fish_detect_m.pt`
 - 可选：`fish_detect_seam.pt`、`fish_seg_yolo26.pt`、`fish_seg_yolo11n.pt`、`sam2.1_t.pt` + `sam2_hiera_t.yaml` 等
 - WWE-UIE 权重自动从 `WWE-UIE/output/Fishery_WWE_UIEB/UIEB/` 取最新 `best_model.pth`
