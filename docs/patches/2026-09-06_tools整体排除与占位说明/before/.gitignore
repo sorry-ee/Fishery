@@ -27,8 +27,7 @@ conda-env/
 *.flv
 *.wmv
 
-# 测试资料：原始视频/图片入库（单文件均 < GitHub 100MB 限制）
-!test_video.mp4
+# 娴嬭瘯璧勬枡锛氬師濮嬭棰?鍥剧墖鍏ュ簱锛堝崟鏂囦欢鍧?< GitHub 100MB 闄愬埗锛?!test_video.mp4
 !test_video_2.mp4
 !test_img.png
 
@@ -59,11 +58,11 @@ eval_result.json
 # Editor backup files
 *.drawio.bkp
 
-# LLM 服务配置（含 API Key，严禁入库）
+# LLM 鏈嶅姟閰嶇疆锛堝惈 API Key锛屼弗绂佸叆搴擄級
 llm_settings.json
 .env
 
-# 运行产物：截图/录像/AI对话文本（outputs/）与基准输出
+# 杩愯浜х墿锛氭埅鍥?褰曞儚/AI瀵硅瘽鏂囨湰锛坥utputs/锛変笌鍩哄噯杈撳嚭
 outputs/
 bench_output/
 
@@ -78,8 +77,11 @@ data.db-wal
 Thumbs.db
 .DS_Store
 
-# tools/ 第三方工具（二进制不入库；从 GitHub Releases 下载 tools_*.zip 解压即得，见 tools/README.md）
-tools/mediamtx/
+# tools/mediamtx锛堟湰鍦?RTSP 鏈嶅姟鍣紝绗笁鏂逛簩杩涘埗 + 鑷姩鐢熸垚鐨?TLS 璇佷功锛泍ml/License 鏂囨湰鎻愪氦锛?tools/mediamtx/mediamtx.exe
+tools/mediamtx/auto.crt
+tools/mediamtx/auto.key
+
+# tools/ffmpeg锛堟湰鍦拌嚜甯?ffmpeg锛岀涓夋柟宸ュ叿浜岃繘鍒讹級
 tools/ffmpeg/
 
 
