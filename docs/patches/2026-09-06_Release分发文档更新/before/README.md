@@ -14,12 +14,9 @@
 
 ## 快速开始
 
-**① 准备大文件（第三方工具/模型权重，不入 git）**：从本仓库 **Releases** 下载以下 zip，解压到**项目根**即可（得到 `tools/`、`models/` 两个文件夹）：
+**① 准备 tools（第三方二进制，不入 git）**：从本仓库 **Releases** 下载 `tools_*.zip`（内含 `mediamtx.exe` 与 `ffmpeg`），解压到项目根即得 `tools/`——无需单独安装 ffmpeg / mediamtx。`auto.crt`/`auto.key` 由 mediamtx 运行时自动生成，不入库、无需理会。
 
-- `tools_*.zip` → 解压得 `tools/`（内含 `mediamtx.exe` + `ffmpeg`，无需单独安装；`auto.crt`/`auto.key` 由 mediamtx 运行时自动生成，无需理会）
-- `models_*.zip` → 解压得 `models/`（全部模型权重 + 配置，含必需 `fish_detect_m.pt`）
-
-其余前置要求：Python 3.11（venv）、NVIDIA GPU（CUDA）、`.env` 中的 DeepSeek Key（详见 `docs/BUILD_RUN.md`）。
+其余前置要求：Python 3.11（venv）、NVIDIA GPU（CUDA）、模型权重、`.env` 中的 DeepSeek Key（详见 `docs/BUILD_RUN.md`）。
 
 > 不确定环境是否就绪？先一键自检（只读，不联网）：
 > `powershell -ExecutionPolicy Bypass -File Z_script\check_env.ps1`，退出码 0 后再启动。
@@ -65,6 +62,5 @@ models/            模型权重（不入 git）
 
 ## 说明
 
-- 模型权重（`models/*.pt` 等）与第三方工具（`tools/`）不入 git——从本仓库 **Releases** 下载 `models_*.zip` / `tools_*.zip` 解压到项目根即可（见「快速开始 ①」）。
-- `.env`（DeepSeek Key）不入 git，需自行创建配置。
+- 模型权重（`models/*.pt` 等）与 `.env`（DeepSeek Key）不入 git，需自行准备。
 - 详细的模块调用链与开发指南见 `docs/deep-dive/developer_guide.md`。

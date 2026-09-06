@@ -122,7 +122,6 @@ docs/patches/
 - **虚拟环境**：`d:\Fishery_Project\.venv`
 - **PyTorch**：2.5.1+cu121（从 PyTorch 官网安装）
 - **GPU**：NVIDIA RTX 3070 Laptop 8GB
-- **大文件分发**：`tools/`（mediamtx/ffmpeg）与 `models/`（权重）不入 git，统一走 GitHub **Releases**（`tools_*.zip` / `models_*.zip`）——解压到项目根即得；维护者用 `Z_script\pack_tools.ps1` / `Z_script\pack_models.ps1` 重新打包。详见 `docs/BUILD_RUN.md`
 
 ### 运行前检查
 
